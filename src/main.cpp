@@ -27,7 +27,7 @@ const char* TOPIC_PUB = "serrure/rfid";
 const char* TOPIC_PAIRING_REQ = "serrure/pairing/request";
 const char* TOPIC_PAIRING_CONFIRM = "serrure/pairing/confirm";
 
-String UID_SERRURE = "A_APPARIER";
+String UID_SERRURE = "APPAIRER";
 String CLE_APAREILLAGE_TEMPORAIRE = "";
 const char* NOUVEL_UID_SERRURE = "01";
 
@@ -143,8 +143,7 @@ void reconnect() {
 void lcd_message_attente() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Systeme pret ID:");
-    lcd.print(UID_SERRURE);
+    lcd.print("Systeme pret");
     lcd.setCursor(0, 1);
     lcd.print("Presentez carte");
 }
