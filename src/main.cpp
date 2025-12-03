@@ -9,7 +9,7 @@
 #include <ArduinoJson.h>
 #include "esp_system.h"
 
-String genererCleAppareillage(int longueurOctets);
+String genererCleappairage(int longueurOctets);
 void ouvrirPorte();
 void lcd_message_attente(); 
 void reconnect();
@@ -27,9 +27,9 @@ const char* TOPIC_PUB = "serrure/rfid";
 const char* TOPIC_PAIRING_REQ = "serrure/pairing/request";
 const char* TOPIC_PAIRING_CONFIRM = "serrure/pairing/confirm";
 
-String UID_SERRURE = "A_APPARIER"; 
-String CLE_APAREILLAGE_TEMPORAIRE = ""; 
-const char* NOUVEL_UID_SERRURE = "01"; 
+String UID_SERRURE = "A_APPARIER";
+String CLE_APAREILLAGE_TEMPORAIRE = "";
+const char* NOUVEL_UID_SERRURE = "01";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -42,10 +42,6 @@ LiquidCrystal_I2C lcd(0x27, 16, 2); // ADRESSE I2C: Tentez 0x3F si 0x27 ne fonct
 
 Servo monServo; 
 const int brocheServo = 26;
-
-const int SERVO_FERME_ANGLE = 0;
-const int SERVO_OUVERT_ANGLE = 90;
-const int SERVO_VITESSE_DELAI = 15;
 
 void callback(char* topic, byte* payload, unsigned int length) {
     String message = "";
@@ -98,7 +94,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
             serializeJson(doc, jsonConfirm);
 
             client.publish(TOPIC_PAIRING_CONFIRM, jsonConfirm.c_str());
-            Serial.print("Appareillage confirme envoye: ");
+            Serial.print("appairage confirme envoye: ");
             Serial.println(jsonConfirm);
 
             UID_SERRURE = NOUVEL_UID_SERRURE;
@@ -106,7 +102,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
             lcd.clear();
             lcd.setCursor(0, 0);
-            lcd.print("APPARIEMENT OK!");
+            lcd.print("Appairage reussi !");
             lcd.setCursor(0, 1);
             delay(5000);
         } else {
@@ -130,7 +126,7 @@ void reconnect() {
             client.subscribe(TOPIC_SUB);
             Serial.print("Abonne a: "); Serial.println(TOPIC_SUB);
             
-            // Abonnement au topic d'appareillage
+            // Abonnement au topic d'appairage
             client.subscribe(TOPIC_PAIRING_REQ);
             Serial.print("Abonne a: "); Serial.println(TOPIC_PAIRING_REQ);
             
@@ -147,23 +143,21 @@ void reconnect() {
 void lcd_message_attente() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Systeme pret (ID:");
+    lcd.print("Systeme pret ID:");
     lcd.print(UID_SERRURE);
-    lcd.print(")");
     lcd.setCursor(0, 1);
     lcd.print("Presentez carte");
 }
 
 
 // Génère une chaîne hexadécimale aléatoire
-String genererCleAppareillage(int longueurOctets) {
+String genererCleappairage(int longueurOctets) {
     String cle = "";
     randomSeed(esp_random()); 
 
     for (int i = 0; i < longueurOctets; i++) {
         byte octetAleatoire = random(0, 256);
         String hex = String(octetAleatoire, HEX);
-
         if (hex.length() < 2) {
             hex = "0" + hex;
         }
@@ -174,30 +168,18 @@ String genererCleAppareillage(int longueurOctets) {
 }
 
 void ouvrirPorte(){
-    Serial.println("Ouverture de la porte...");
-    
-    for (int angle = SERVO_FERME_ANGLE; angle <= SERVO_OUVERT_ANGLE; angle++) {
-        monServo.write(angle);
-        delay(SERVO_VITESSE_DELAI); 
-    }
-
-    delay(2500); 
-
-    for (int angle = SERVO_OUVERT_ANGLE; angle >= SERVO_FERME_ANGLE; angle--) {
-        monServo.write(angle);
-        delay(SERVO_VITESSE_DELAI);
-    }
-    
-    Serial.println("Porte refermee.");
+    monServo.writeMicroseconds(1700);
+    delay(1000);
+    monServo.writeMicroseconds(1500);
 }
 
 void setup() {
     Serial.begin(115200);
 
     const int LONGUEUR_CLE = 8;
-    CLE_APAREILLAGE_TEMPORAIRE = genererCleAppareillage(LONGUEUR_CLE);
+    CLE_APAREILLAGE_TEMPORAIRE = genererCleappairage(LONGUEUR_CLE);
     
-    Serial.print("Cle d'appareillage a entrer sur le serveur pour le provisioning : ");
+    Serial.print("Cle d'appairage a entrer sur le serveur pour le provisioning : ");
     Serial.println(CLE_APAREILLAGE_TEMPORAIRE);
 
     SPI.begin();
@@ -225,7 +207,7 @@ void setup() {
 
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Cle Appareillage:");
+    lcd.print("Cle appairage:");
     lcd.setCursor(0, 1);
     lcd.print(CLE_APAREILLAGE_TEMPORAIRE);
 
