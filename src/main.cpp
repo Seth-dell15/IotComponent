@@ -40,12 +40,12 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // ADRESSE I2C: Tentez 0x3F si 0x27 ne fonctionne pas
 
-// Servo monServo; 
-// const int brocheServo = 26;
+Servo monServo; 
+const int brocheServo = 26;
 
-// const int SERVO_FERME_ANGLE = 0;
-// const int SERVO_OUVERT_ANGLE = 90;
-// const int SERVO_VITESSE_DELAI = 15;
+const int SERVO_FERME_ANGLE = 0;
+const int SERVO_OUVERT_ANGLE = 90;
+const int SERVO_VITESSE_DELAI = 15;
 
 void callback(char* topic, byte* payload, unsigned int length) {
     String message = "";
@@ -108,8 +108,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
             lcd.setCursor(0, 0);
             lcd.print("APPARIEMENT OK!");
             lcd.setCursor(0, 1);
-            lcd.print("ID: ");
-            lcd.print(NOUVEL_UID_SERRURE);
             delay(5000);
         } else {
             lcd.clear();
@@ -145,16 +143,16 @@ void reconnect() {
     }
 }
 
-// // Reinitialise l'affichage LCD a l'etat d'attente normal
-// void lcd_message_attente() {
-//     lcd.clear();
-//     lcd.setCursor(0, 0);
-//     lcd.print("Systeme pret (ID:");
-//     lcd.print(UID_SERRURE);
-//     lcd.print(")");
-//     lcd.setCursor(0, 1);
-//     lcd.print("Presentez carte");
-// }
+// Reinitialise l'affichage LCD a l'etat d'attente normal
+void lcd_message_attente() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Systeme pret (ID:");
+    lcd.print(UID_SERRURE);
+    lcd.print(")");
+    lcd.setCursor(0, 1);
+    lcd.print("Presentez carte");
+}
 
 
 // Génère une chaîne hexadécimale aléatoire
@@ -175,23 +173,23 @@ String genererCleAppareillage(int longueurOctets) {
     return cle;
 }
 
-// void ouvrirPorte(){
-//     Serial.println("Ouverture de la porte...");
+void ouvrirPorte(){
+    Serial.println("Ouverture de la porte...");
     
-//     for (int angle = SERVO_FERME_ANGLE; angle <= SERVO_OUVERT_ANGLE; angle++) {
-//         monServo.write(angle);
-//         delay(SERVO_VITESSE_DELAI); 
-//     }
+    for (int angle = SERVO_FERME_ANGLE; angle <= SERVO_OUVERT_ANGLE; angle++) {
+        monServo.write(angle);
+        delay(SERVO_VITESSE_DELAI); 
+    }
 
-//     delay(2500); 
+    delay(2500); 
 
-//     for (int angle = SERVO_OUVERT_ANGLE; angle >= SERVO_FERME_ANGLE; angle--) {
-//         monServo.write(angle);
-//         delay(SERVO_VITESSE_DELAI);
-//     }
+    for (int angle = SERVO_OUVERT_ANGLE; angle >= SERVO_FERME_ANGLE; angle--) {
+        monServo.write(angle);
+        delay(SERVO_VITESSE_DELAI);
+    }
     
-//     Serial.println("Porte refermee.");
-// }
+    Serial.println("Porte refermee.");
+}
 
 void setup() {
     Serial.begin(115200);
@@ -218,12 +216,12 @@ void setup() {
     lcd.init();
     lcd.backlight();
     
-    // // Test d'initialisation du LCD (utile pour regler le contraste)
-    // lcd.setCursor(0, 0);
-    // lcd.print("LCD Test OK");
-    // lcd.setCursor(0, 1);
-    // lcd.print("Contraste / I2C?");
-    // delay(3000);
+    // Test d'initialisation du LCD (utile pour regler le contraste)
+    lcd.setCursor(0, 0);
+    lcd.print("LCD Test OK");
+    lcd.setCursor(0, 1);
+    lcd.print("Contraste / I2C?");
+    delay(3000);
 
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -267,7 +265,6 @@ void loop() {
     String jsonString;
     serializeJson(doc, jsonString);
 
-    // Publication du message via MQTT
     if (client.publish(TOPIC_PUB, jsonString.c_str())) {
         Serial.print("Message JSON envoye: ");
         Serial.println(jsonString);
