@@ -1,0 +1,62 @@
+# Serrure IoT — Guide rapide pour faire fonctionner le code (ta version)
+
+But : ce fichier reprend ta version du projet et donne exactement ce qu'il faut modifier et vérifier pour que le code fonctionne (réseau, MQTT, matériel).
+
+## Pré-requis logiciels
+- PlatformIO (recommandé) dans VS Code ou Arduino IDE avec core ESP32.
+- Bibliothèques (PlatformIO: add to `platformio.ini` or use Library Manager):
+  - MFRC522
+  - PubSubClient
+  - LiquidCrystal_I2C
+  - ArduinoJson
+  - Servo
+
+## Fichiers principaux
+- `src/main.cpp` — code principal. C'est celui à configurer.
+
+## Variables à modifier dans `src/main.cpp`
+Ouvre `src/main.cpp` et adapte en début de fichier :
+
+- WiFi :
+  - WIFI_SSID — ton SSID Wi‑Fi
+  - WIFI_PASSWORD — ton mot de passe Wi‑Fi
+
+- MQTT :
+  - MQTT_SERVER — adresse du broker (ex: `broker.emqx.io` ou IP)
+  - MQTT_PORT — port (1883 pour non‑TLS)
+
+- Topics (si tu veux changer) :
+  - TOPIC_PUB (`serrure/rfid`) — topic pour publier l'UID
+  - TOPIC_SUB (`serrure/response`) — topic pour recevoir OK/REFUSE
+  - TOPIC_PAIRING_REQ (`serrure/pairing/request`) — cle d'appairage reçue
+  - TOPIC_PAIRING_CONFIRM (`serrure/pairing/confirm`) — confirmation publish JSON
+
+- Matériel / pins :
+  - RST_PIN, SS_PIN — pins MFRC522 (par défaut dans ton code RST=4, SDA/SS=5)
+  - brocheServo — pin servo (par défaut 26). Décommente `monServo.attach(brocheServo);` dans `setup()` si tu utilises le servo.
+  - Adresse I2C LCD — si l'écran n'affiche rien, teste 0x27 et 0x3F (modifie `LiquidCrystal_I2C lcd(0x27, 16, 2);` si besoin).
+
+- UID permanent : `UID_SERRURE` (valeur par défaut `"A_APPARIER"`) et `NOUVEL_UID_SERRURE` (ex: `"01"`) si tu veux un id fixe après appairage.
+
+## Mise sous tension / alimentation
+- Alimentation servo : utiliser généralement une alimentation séparée (5V) avec masse commune à l'ESP32.
+- Ne pas alimenter un servo gourmand depuis le 3.3V de l'ESP32.
+
+## Flot d'appairage (comment tester)
+1. Flash le firmware.
+2. Sur le moniteur série tu verras la clé temporaire générée (ex: `DB95E48B1251D2A2`) — c'est la clé à envoyer depuis ton serveur/web.
+3. Le serveur publie la clé sur `serrure/pairing/request`.
+4. Si la clé correspond, l'ESP32 publie sur `serrure/pairing/confirm` un JSON : `{"uid_serrure":"01","status":"ok"}`.
+
+Important : certains clients MQTT ajoutent des guillemets au payload (ex: `"DB95..."`) — ton code nettoie déjà ces guillemets avant comparaison.
+
+## Build, flash et monitor (PlatformIO / PowerShell)
+- Compiler :
+  - platformio run
+- Flasher :
+  - platformio run -t upload
+- Moniteur série :
+  - platformio device monitor --port COM3 --baud 115200
+  (Remplace COM3 par le port de ton ESP32)
+
+Avec Arduino IDE : sélectionner la carte ESP32, monter le port COM, puis Upload et Serial Monitor (115200).
